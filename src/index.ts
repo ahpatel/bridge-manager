@@ -63,8 +63,13 @@ const app = new Hono<{
 	Bindings: Env;
 }>();
 
-// Protect all routes with Cloudflare Access JWT validation
-app.use("*", validateAccessJWT);
+// Protect all routes except the main UI page
+app.use("*", async (c, next) => {
+	if (c.req.path === "/") {
+		return await next();
+	}
+	return await validateAccessJWT(c, next);
+});
 
 // Simple UI for management
 app.get("/", (c) => {
@@ -136,8 +141,15 @@ app.get("/", (c) => {
                 const res = await fetch('/api/bbctl', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ args, async })
                 });
+                
+                if (res.status === 401) {
+                    output.textContent = 'ERROR: Unauthorized. Please refresh the page to re-authenticate with Cloudflare Access.';
+                    return;
+                }
+
                 const data = await res.json();
                 let result = '';
                 if (data.Output) result += data.Output;
@@ -145,7 +157,7 @@ app.get("/", (c) => {
                 output.textContent = result || 'Success (no output)';
                 refreshProcs();
             } catch (e) {
-                output.textContent = 'Error: ' + e.message;
+                output.textContent = 'Error connecting to API: ' + e.message;
             }
         }
 
@@ -164,7 +176,8 @@ app.get("/", (c) => {
         async function refreshProcs() {
             const procsDiv = document.getElementById('procs');
             try {
-                const res = await fetch('/api/procs');
+                const res = await fetch('/api/procs', { credentials: 'include' });
+                if (res.status === 401) return;
                 const list = await res.json();
                 if (list && list.length > 0) {
                     procsDiv.innerHTML = list.map(p => '<span class="running-badge">' + p + '</span>').join(' ');
@@ -177,7 +190,7 @@ app.get("/", (c) => {
         }
 
         // Initialize status and process list
-        fetch('/status').then(r => r.text()).then(t => {
+        fetch('/status', { credentials: 'include' }).then(r => r.text()).then(t => {
             document.getElementById('status').textContent = t;
         });
         refreshProcs();
