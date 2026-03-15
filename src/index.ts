@@ -2,7 +2,7 @@ import { Container, getContainer } from "@cloudflare/containers";
 import { Hono } from "hono";
 
 interface Env {
-	MY_CONTAINER: DurableObjectNamespace<MyContainer>;
+	MY_CONTAINER: DurableObjectNamespace<BeeperContainer>;
 	ACCESS_AUDIENCE: string;
 }
 
@@ -48,7 +48,7 @@ async function validateAccessJWT(c: any, next: any) {
 	}
 }
 
-export class MyContainer extends Container<Env> {
+export class BeeperContainer extends Container<Env> {
 	// Port the container listens on
 	defaultPort = 8080;
 	requiredPorts = [8080];
@@ -58,10 +58,6 @@ export class MyContainer extends Container<Env> {
 	override onActivityExpired(): boolean {
 		// Keep the container alive as long as possible for now
 		return true;
-	}
-
-	override onError(error: Error) {
-		console.error("Beeper Bridge Manager container error:", error);
 	}
 }
 
