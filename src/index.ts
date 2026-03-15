@@ -51,11 +51,12 @@ async function validateAccessJWT(c: any, next: any) {
 export class MyContainer extends Container<Env> {
 	// Port the container listens on
 	defaultPort = 8080;
+	requiredPorts = [8080];
 	// We want the container to stay alive for as long as possible or as configured
 	sleepAfter = "1h";
 
-	override onStart() {
-		console.log("Beeper Bridge Manager container started");
+	override async onStart() {
+		console.log("Beeper Bridge Manager container starting. Durable Object ID:", this.id.toString());
 	}
 }
 
@@ -205,8 +206,11 @@ app.get("/", (c) => {
 
 // Status check endpoint
 app.get("/status", async (c) => {
+	console.log("Checking status for beeper-manager...");
 	const container = getContainer(c.env.MY_CONTAINER, "beeper-manager");
 	try {
+		// Ensure container is started and ports are ready
+		await container.startAndWaitForPorts({ timeout: 30000 });
 		const res = await container.fetch(new Request(c.req.url));
 		return c.text(await res.text());
 	} catch (e) {
@@ -216,13 +220,25 @@ app.get("/status", async (c) => {
 
 // Proxy API requests to the container
 app.post("/api/bbctl", async (c) => {
+	console.log("Forwarding bbctl request to container...");
 	const container = getContainer(c.env.MY_CONTAINER, "beeper-manager");
-	return await container.fetch(c.req.raw);
+	try {
+		await container.startAndWaitForPorts({ timeout: 30000 });
+		return await container.fetch(c.req.raw);
+	} catch (e) {
+		return c.json({ error: (e as Error).message }, 500);
+	}
 });
 
 app.get("/api/procs", async (c) => {
+	console.log("Fetching running processes...");
 	const container = getContainer(c.env.MY_CONTAINER, "beeper-manager");
-	return await container.fetch(c.req.raw);
+	try {
+		await container.startAndWaitForPorts({ timeout: 30000 });
+		return await container.fetch(c.req.raw);
+	} catch (e) {
+		return c.json({ error: (e as Error).message }, 500);
+	}
 });
 
 export default app;

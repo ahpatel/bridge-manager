@@ -123,6 +123,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.Println("Container API server starting up...")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

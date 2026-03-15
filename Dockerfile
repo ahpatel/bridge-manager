@@ -15,7 +15,7 @@ COPY container_src/go.mod ./
 # (Optional: COPY container_src/go.sum ./ if it exists)
 RUN go mod download || true
 COPY container_src/*.go ./
-RUN go build -o /server
+RUN CGO_ENABLED=0 go build -o /server
 
 # Stage 2: Final Runtime Image
 FROM alpine:3.21
