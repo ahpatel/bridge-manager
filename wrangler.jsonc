@@ -39,8 +39,12 @@
 		},
 		{
 			"tag": "v2",
-			"new_sqlite_classes": ["BeeperContainer"],
-			"deleted_classes": ["MyContainer"]
+			"renamed_classes": [
+				{
+					"from": "MyContainer",
+					"to": "BeeperContainer"
+				}
+			]
 		}
 	],
 	"upload_source_maps": true
