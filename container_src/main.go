@@ -95,6 +95,8 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp.Status = "error"
 		resp.Error = err.Error()
+		// Even on error, we want to see what was captured in CombinedOutput
+		resp.Output = string(output)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

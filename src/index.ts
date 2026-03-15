@@ -139,7 +139,10 @@ app.get("/", (c) => {
                     body: JSON.stringify({ args, async })
                 });
                 const data = await res.json();
-                output.textContent = data.Output || data.Error || 'Success (no output)';
+                let result = '';
+                if (data.Output) result += data.Output;
+                if (data.Error) result += '\nERROR: ' + data.Error;
+                output.textContent = result || 'Success (no output)';
                 refreshProcs();
             } catch (e) {
                 output.textContent = 'Error: ' + e.message;
