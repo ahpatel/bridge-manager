@@ -1,8 +1,8 @@
 {
-	"name": "containers-template",
-	"description": "Build a Container-enabled Worker",
+	"name": "beeper-bridge-manager",
+	"description": "Host Beeper Bridge Manager on Cloudflare Containers",
 	"cloudflare": {
-		"label": "Containers Starter",
+		"label": "Beeper Bridge Manager",
 		"products": [
 			"Workers",
 			"Durable Objects",

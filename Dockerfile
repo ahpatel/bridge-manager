@@ -1,24 +1,63 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.24-alpine AS build
+# Stage 1: Build everything (Go binaries)
+FROM golang:1.24-alpine AS builder
 
-# Set destination for COPY
-WORKDIR /app
+# Build bbctl
+WORKDIR /build-bbctl
+RUN apk add --no-cache git bash
+RUN git clone https://github.com/beeper/bridge-manager.git .
+RUN ./build.sh
 
-# Download any Go modules
+# Build our custom API server
+WORKDIR /build-api
 COPY container_src/go.mod ./
-RUN go mod download
-
-# Copy container source code
+# (Optional: COPY container_src/go.sum ./ if it exists)
+RUN go mod download || true
 COPY container_src/*.go ./
+RUN go build -o /server
 
-# Build
-RUN CGO_ENABLED=0 GOOS=linux go build -o /server
+# Stage 2: Final Runtime Image
+FROM alpine:3.21
 
-FROM scratch
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /server /server
+# Install system dependencies for bridges
+RUN apk add --no-cache \
+    bash \
+    curl \
+    jq \
+    git \
+    ffmpeg \
+    python3 \
+    py3-pip \
+    py3-setuptools \
+    py3-wheel \
+    py3-aiohttp \
+    py3-pillow \
+    py3-ruamel.yaml \
+    py3-magic \
+    # Build dependencies for some python packages if needed
+    gcc \
+    musl-dev \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    ca-certificates
+
+# Copy binaries from builder
+COPY --from=builder /build-bbctl/bbctl /usr/local/bin/bbctl
+COPY --from=builder /server /server
+
+# Set up data directory for persistence
+RUN mkdir -p /data
+ENV HOME=/data
+ENV XDG_CONFIG_HOME=/data/.config
+ENV XDG_DATA_HOME=/data/.local/share
+ENV XDG_CACHE_HOME=/data/.cache
+
+WORKDIR /data
+
+# Expose the API server port
 EXPOSE 8080
 
-# Run
+# Run our custom API server which will manage bbctl
 CMD ["/server"]

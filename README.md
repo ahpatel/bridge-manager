@@ -1,59 +1,56 @@
-# Containers Starter
+# Beeper Bridge Manager on Cloudflare
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/containers-template)
+This project allows you to host [Beeper Bridge Manager](https://github.com/beeper/bridge-manager) (`bbctl`) and its bridges on [Cloudflare Containers (Beta)](https://developers.cloudflare.com/containers/).
 
-![Containers Template Preview](https://imagedelivery.net/_yJ02hpOMj_EnGvsU2aygw/5aba1fb7-b937-46fd-fa67-138221082200/public)
+## Features
+- **Serverless Hosting:** No need for a 24/7 home server or Raspberry Pi.
+- **Easy Management:** Simple web UI to login and manage bridges.
+- **Persistence:** Uses Cloudflare Durable Objects for persistent session storage.
+- **Auto-Installation:** Bridges are automatically installed and configured.
 
-<!-- dash-content-start -->
+## Step-by-Step Guide
 
-This is a [Container](https://developers.cloudflare.com/containers/) starter template.
+### 1. Prerequisites
+- A Cloudflare account with Workers and Containers (Beta) enabled.
+- Node.js and `npm` installed locally.
+- A Beeper account.
 
-It demonstrates basic Container configuration, launching and routing to individual container, load balancing over multiple container, running basic hooks on container status changes.
-
-<!-- dash-content-end -->
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
-
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/containers-template
-```
-
-## Getting Started
-
-First, run:
-
+### 2. Deployment
+Clone this repository and run:
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
+npm run deploy
 ```
+After deployment, Wrangler will provide a URL (e.g., `https://beeper-bridge-manager.your-subdomain.workers.dev`).
 
-Then run the development server (using the package manager of your choice):
+### 3. Login to Beeper
+1. Open the deployed URL in your browser.
+2. You need a **Beeper Login Token**. 
+   - If you have `bbctl` locally: Run `bbctl login` and copy the token.
+   - Alternatively, you can obtain a token via the Beeper desktop app or by asking in the `#self-hosting:beeper.com` Matrix room.
+3. Paste the token into the **Beeper Login Token** field and click **Login to Beeper**.
 
-```bash
-npm run dev
-```
+### 4. Start a Bridge
+1. Select a bridge (e.g., **WhatsApp**) from the dropdown.
+2. Click **Start Bridge in Background**.
+3. The container will download and install the bridge dependencies (this may take a minute for the first run).
+4. Click **Refresh List** to verify the bridge is running.
 
-Open [http://localhost:8787](http://localhost:8787) with your browser to see the result.
+### 5. Configure the Bridge in Beeper
+Once the bridge is running on Cloudflare:
+1. Open your Beeper app.
+2. You should see a new bot for the bridge (e.g., `@sh-whatsappbot:beeper.local`).
+3. Send a message to the bot to start the login process for that specific service (e.g., scan the QR code for WhatsApp).
 
-You can start editing your Worker by modifying `src/index.ts` and you can start
-editing your Container by editing the content of `container_src`.
+## How it Works
+- **Worker:** A Cloudflare Worker (`src/index.ts`) provides the web UI and routes requests to the container.
+- **Container:** A Docker container (`Dockerfile`) builds `bbctl` and runs a Go-based API server (`container_src/main.go`).
+- **Persistence:** All data is stored in `/data` inside the container, which is backed by a Cloudflare Durable Object, ensuring your login stays active even if the container restarts.
 
-## Deploying To Production
+## Maintenance
+- Use the **Check Login Status** button to verify you are still logged into Beeper.
+- Use **List Running Bridges** to see which bridges are currently active in the background.
 
-| Command          | Action                                |
-| :--------------- | :------------------------------------ |
-| `npm run deploy` | Deploy your application to Cloudflare |
-
-## Learn More
-
-To learn more about Containers, take a look at the following resources:
-
-- [Container Documentation](https://developers.cloudflare.com/containers/) - learn about Containers
-- [Container Class](https://github.com/cloudflare/containers) - learn about the Container helper class
-
-Your feedback and contributions are welcome!
+## Troubleshooting
+- **Container Timeout:** If the container goes to sleep, visiting the Worker URL will wake it up.
+- **Memory/CPU:** Official bridges vary in resource usage. Cloudflare Containers (Beta) has specific limits during the preview period.
