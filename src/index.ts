@@ -136,7 +136,7 @@ app.get("/", (c) => {
     <pre id="output">Waiting for action...</pre>
 
     <script>
-        async function callApi(args, async = false) {
+        async function callApi(args, isAsync = false) {
             const output = document.getElementById('output');
             output.textContent = 'Executing: bbctl ' + args.join(' ') + '...';
             try {
@@ -144,22 +144,22 @@ app.get("/", (c) => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ args, async })
+                    body: JSON.stringify({ args: args, async: isAsync })
                 });
                 
                 if (res.status === 401) {
-                    output.textContent = 'ERROR: Unauthorized. Please refresh the page to re-authenticate with Cloudflare Access.';
+                    output.textContent = 'ERROR: Unauthorized. Please refresh the page.';
                     return;
                 }
 
                 const data = await res.json();
                 let result = '';
                 if (data.Output) result += data.Output;
-                if (data.Error) result += '\nERROR: ' + data.Error;
-                output.textContent = result || 'Success (no output)';
+                if (data.Error) result += '\\nERROR: ' + data.Error;
+                output.textContent = result || 'Command finished.';
                 refreshProcs();
             } catch (e) {
-                output.textContent = 'Error connecting to API: ' + e.message;
+                output.textContent = 'Error: ' + e.message;
             }
         }
 
@@ -171,7 +171,6 @@ app.get("/", (c) => {
 
         async function runBridge() {
             const bridge = document.getElementById('bridge').value;
-            // Bridge run is always async to avoid hanging the UI
             await callApi(['run', bridge], true);
         }
 
@@ -191,12 +190,10 @@ app.get("/", (c) => {
             }
         }
 
-        // Initialize status and process list
         fetch('/status', { credentials: 'include' }).then(r => r.text()).then(t => {
             document.getElementById('status').textContent = t;
         });
         refreshProcs();
-        // Periodically refresh processes
         setInterval(refreshProcs, 5000);
     </script>
 </body>
