@@ -102,14 +102,14 @@ app.get("/", (c) => {
     <div class="form-group">
         <label>Running Processes:</label>
         <div id="procs">Loading...</div>
-        <button onclick="refreshProcs()" style="margin-top: 0.5rem;">Refresh List</button>
+        <button onclick="window.refreshProcs()" style="margin-top: 0.5rem;">Refresh List</button>
     </div>
     
     <div class="form-group">
         <label for="token">Beeper Login Token:</label>
         <input type="text" id="token" placeholder="Paste your token here..." style="width: 100%;">
         <p><small>Get your token by running <code>bbctl login</code> locally or via Beeper help.</small></p>
-        <button onclick="login()">Login to Beeper</button>
+        <button onclick="window.login()">Login to Beeper</button>
     </div>
     
     <div class="form-group">
@@ -123,13 +123,13 @@ app.get("/", (c) => {
             <option value="sh-googlechat">Google Chat</option>
             <option value="sh-gmessages">Google Messages</option>
         </select>
-        <button onclick="runBridge()" style="width: 100%; margin-top: 0.5rem;">Start Bridge in Background</button>
+        <button onclick="window.runBridge()" style="width: 100%; margin-top: 0.5rem;">Start Bridge in Background</button>
     </div>
 
     <div class="form-group">
         <label>Quick Actions:</label>
-        <button onclick="callApi(['list'])">List Configured Bridges</button>
-        <button onclick="callApi(['whoami'])" style="background: #6c757d;">Check Login Status</button>
+        <button onclick="window.callApi(['list'])">List Configured Bridges</button>
+        <button onclick="window.callApi(['whoami'])" style="background: #6c757d;">Check Login Status</button>
     </div>
 
     <h3>Terminal Output:</h3>
@@ -137,7 +137,10 @@ app.get("/", (c) => {
 
     <script>
         (function() {
+            console.log('Beeper Bridge Manager UI initializing...');
+            
             window.callApi = async function(args, isAsync) {
+                console.log('callApi called with:', args, isAsync);
                 const output = document.getElementById('output');
                 output.textContent = 'Executing: bbctl ' + args.join(' ') + '...';
                 try {
@@ -148,29 +151,34 @@ app.get("/", (c) => {
                         body: JSON.stringify({ args: args, async: !!isAsync })
                     });
                     
+                    console.log('API response status:', res.status);
                     if (res.status === 401) {
                         output.textContent = 'ERROR: Unauthorized. Please refresh the page.';
                         return;
                     }
 
                     const data = await res.json();
+                    console.log('API response data:', data);
                     let result = '';
                     if (data.Output) result += data.Output;
                     if (data.Error) result += '\\nERROR: ' + data.Error;
                     output.textContent = result || 'Command finished.';
-                    refreshProcs();
+                    window.refreshProcs();
                 } catch (e) {
+                    console.error('API Error:', e);
                     output.textContent = 'Error: ' + e.message;
                 }
             };
 
             window.login = async function() {
+                console.log('Login button clicked');
                 const token = document.getElementById('token').value;
                 if (!token) return alert('Token is required');
                 await window.callApi(['login', '--token', token]);
             };
 
             window.runBridge = async function() {
+                console.log('Run Bridge button clicked');
                 const bridge = document.getElementById('bridge').value;
                 await window.callApi(['run', bridge], true);
             };
@@ -187,16 +195,21 @@ app.get("/", (c) => {
                         procsDiv.textContent = 'No bridges running.';
                     }
                 } catch (e) {
+                    console.error('RefreshProcs Error:', e);
                     procsDiv.textContent = 'Error loading processes.';
                 }
             };
 
             // Init
+            console.log('Fetching initial status...');
             fetch('/status', { credentials: 'include' }).then(r => r.text()).then(t => {
+                console.log('Initial status received:', t);
                 document.getElementById('status').textContent = t;
-            });
+            }).catch(e => console.error('Status fetch error:', e));
+            
             window.refreshProcs();
             setInterval(window.refreshProcs, 5000);
+            console.log('UI initialization complete.');
         })();
     </script>
 </body>
