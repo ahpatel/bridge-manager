@@ -48,7 +48,12 @@
 		},
 		{
 			"tag": "v3",
-			"new_sqlite_classes": ["AppContainer"]
+			"new_sqlite_classes": [
+				"AppContainer"
+			],
+			"deleted_classes": [
+				"BeeperContainer"
+			]
 		}
 	],
 	"upload_source_maps": true
