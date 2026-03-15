@@ -33,3 +33,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           wranglerVersion: '4.73.0'
           command: deploy
+          vars: |
+            ACCESS_AUDIENCE=${{ secrets.CLOUDFLARE_ACCESS_AUDIENCE }}
