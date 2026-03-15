@@ -27,11 +27,18 @@ jobs:
       - name: Install Wrangler
         run: npm install -g wrangler@4.73.0
 
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_ACCESS_AUDIENCE }}" ]; then
+            echo "ERROR: CLOUDFLARE_ACCESS_AUDIENCE is missing from GitHub Secrets!"
+            exit 1
+          else
+            echo "CLOUDFLARE_ACCESS_AUDIENCE is present."
+          fi
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           wranglerVersion: '4.73.0'
-          command: deploy
-          vars: |
-            ACCESS_AUDIENCE=${{ secrets.CLOUDFLARE_ACCESS_AUDIENCE }}
+          command: deploy --var ACCESS_AUDIENCE:${{ secrets.CLOUDFLARE_ACCESS_AUDIENCE }}
