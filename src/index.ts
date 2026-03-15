@@ -24,7 +24,9 @@ async function validateAccessJWT(c: any, next: any) {
 		const payload = JSON.parse(atob(parts[1]));
 		
 		// 1. Verify Audience
-		if (payload.aud !== aud) {
+		// Cloudflare Access 'aud' can be a string or an array of strings
+		const jwtAud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+		if (!jwtAud.includes(aud)) {
 			return c.text("Invalid JWT Audience", 401);
 		}
 
