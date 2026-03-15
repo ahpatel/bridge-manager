@@ -18,7 +18,7 @@
 		{
 			"class_name": "MyContainer",
 			"image": "./Dockerfile",
-			"instance_type": "standard-1",
+			"instance_type": "basic",
 			"max_instances": 10
 		}
 	],
@@ -36,6 +36,10 @@
 				"MyContainer"
 			],
 			"tag": "v1"
+		},
+		{
+			"tag": "v2",
+			"new_sqlite_classes": ["MyContainer"]
 		}
 	],
 	"upload_source_maps": true

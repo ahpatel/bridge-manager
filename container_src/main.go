@@ -128,6 +128,8 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.SetOutput(os.Stdout)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	log.Println("Container API server starting up...")
 	
 	port := os.Getenv("PORT")
