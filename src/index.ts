@@ -2,7 +2,7 @@ import { Container, getContainer } from "@cloudflare/containers";
 import { Hono } from "hono";
 
 interface Env {
-	MY_CONTAINER: DurableObjectNamespace<BeeperContainer>;
+	CONTAINER_DO: DurableObjectNamespace<AppContainer>;
 	ACCESS_AUDIENCE: string;
 }
 
@@ -48,7 +48,7 @@ async function validateAccessJWT(c: any, next: any) {
 	}
 }
 
-export class BeeperContainer extends Container<Env> {
+export class AppContainer extends Container<Env> {
 	// Port the container listens on
 	defaultPort = 8080;
 	requiredPorts = [8080];
@@ -208,7 +208,7 @@ app.get("/", (c) => {
 // Status check endpoint
 app.get("/status", async (c) => {
 	console.log("Checking status for beeper-manager...");
-	const container = getContainer(c.env.MY_CONTAINER, "beeper-manager");
+	const container = getContainer(c.env.CONTAINER_DO, "beeper-v3");
 	try {
 		// Ensure container is started and ports are ready
 		await container.startAndWaitForPorts({ timeout: 30000 });
@@ -222,7 +222,7 @@ app.get("/status", async (c) => {
 // Proxy API requests to the container
 app.post("/api/bbctl", async (c) => {
 	console.log("Forwarding bbctl request to container...");
-	const container = getContainer(c.env.MY_CONTAINER, "beeper-manager");
+	const container = getContainer(c.env.CONTAINER_DO, "beeper-v3");
 	try {
 		await container.startAndWaitForPorts({ timeout: 30000 });
 		return await container.fetch(c.req.raw);
@@ -233,7 +233,7 @@ app.post("/api/bbctl", async (c) => {
 
 app.get("/api/procs", async (c) => {
 	console.log("Fetching running processes...");
-	const container = getContainer(c.env.MY_CONTAINER, "beeper-manager");
+	const container = getContainer(c.env.CONTAINER_DO, "beeper-v3");
 	try {
 		await container.startAndWaitForPorts({ timeout: 30000 });
 		return await container.fetch(c.req.raw);

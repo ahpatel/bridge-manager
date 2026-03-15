@@ -16,17 +16,17 @@
 	},
 	"containers": [
 		{
-			"class_name": "BeeperContainer",
+			"class_name": "AppContainer",
 			"image": "./Dockerfile",
-			"instance_type": "basic",
+			"instance_type": "standard-1",
 			"max_instances": 10
 		}
 	],
 	"durable_objects": {
 		"bindings": [
 			{
-				"class_name": "BeeperContainer",
-				"name": "MY_CONTAINER"
+				"class_name": "AppContainer",
+				"name": "CONTAINER_DO"
 			}
 		]
 	},
@@ -45,6 +45,10 @@
 					"to": "BeeperContainer"
 				}
 			]
+		},
+		{
+			"tag": "v3",
+			"new_sqlite_classes": ["AppContainer"]
 		}
 	],
 	"upload_source_maps": true
