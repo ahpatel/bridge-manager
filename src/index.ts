@@ -136,65 +136,68 @@ app.get("/", (c) => {
     <pre id="output">Waiting for action...</pre>
 
     <script>
-        async function callApi(args, isAsync = false) {
-            const output = document.getElementById('output');
-            output.textContent = 'Executing: bbctl ' + args.join(' ') + '...';
-            try {
-                const res = await fetch('/api/bbctl', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ args: args, async: isAsync })
-                });
-                
-                if (res.status === 401) {
-                    output.textContent = 'ERROR: Unauthorized. Please refresh the page.';
-                    return;
+        (function() {
+            window.callApi = async function(args, isAsync) {
+                const output = document.getElementById('output');
+                output.textContent = 'Executing: bbctl ' + args.join(' ') + '...';
+                try {
+                    const res = await fetch('/api/bbctl', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ args: args, async: !!isAsync })
+                    });
+                    
+                    if (res.status === 401) {
+                        output.textContent = 'ERROR: Unauthorized. Please refresh the page.';
+                        return;
+                    }
+
+                    const data = await res.json();
+                    let result = '';
+                    if (data.Output) result += data.Output;
+                    if (data.Error) result += '\\nERROR: ' + data.Error;
+                    output.textContent = result || 'Command finished.';
+                    refreshProcs();
+                } catch (e) {
+                    output.textContent = 'Error: ' + e.message;
                 }
+            };
 
-                const data = await res.json();
-                let result = '';
-                if (data.Output) result += data.Output;
-                if (data.Error) result += '\\nERROR: ' + data.Error;
-                output.textContent = result || 'Command finished.';
-                refreshProcs();
-            } catch (e) {
-                output.textContent = 'Error: ' + e.message;
-            }
-        }
+            window.login = async function() {
+                const token = document.getElementById('token').value;
+                if (!token) return alert('Token is required');
+                await window.callApi(['login', '--token', token]);
+            };
 
-        async function login() {
-            const token = document.getElementById('token').value;
-            if (!token) return alert('Token is required');
-            await callApi(['login', '--token', token]);
-        }
+            window.runBridge = async function() {
+                const bridge = document.getElementById('bridge').value;
+                await window.callApi(['run', bridge], true);
+            };
 
-        async function runBridge() {
-            const bridge = document.getElementById('bridge').value;
-            await callApi(['run', bridge], true);
-        }
-
-        async function refreshProcs() {
-            const procsDiv = document.getElementById('procs');
-            try {
-                const res = await fetch('/api/procs', { credentials: 'include' });
-                if (res.status === 401) return;
-                const list = await res.json();
-                if (list && list.length > 0) {
-                    procsDiv.innerHTML = list.map(p => '<span class="running-badge">' + p + '</span>').join(' ');
-                } else {
-                    procsDiv.textContent = 'No bridges running.';
+            window.refreshProcs = async function() {
+                const procsDiv = document.getElementById('procs');
+                try {
+                    const res = await fetch('/api/procs', { credentials: 'include' });
+                    if (res.status === 401) return;
+                    const list = await res.json();
+                    if (list && list.length > 0) {
+                        procsDiv.innerHTML = list.map(p => '<span class="running-badge">' + p + '</span>').join(' ');
+                    } else {
+                        procsDiv.textContent = 'No bridges running.';
+                    }
+                } catch (e) {
+                    procsDiv.textContent = 'Error loading processes.';
                 }
-            } catch (e) {
-                procsDiv.textContent = 'Error loading processes.';
-            }
-        }
+            };
 
-        fetch('/status', { credentials: 'include' }).then(r => r.text()).then(t => {
-            document.getElementById('status').textContent = t;
-        });
-        refreshProcs();
-        setInterval(refreshProcs, 5000);
+            // Init
+            fetch('/status', { credentials: 'include' }).then(r => r.text()).then(t => {
+                document.getElementById('status').textContent = t;
+            });
+            window.refreshProcs();
+            setInterval(window.refreshProcs, 5000);
+        })();
     </script>
 </body>
 </html>
