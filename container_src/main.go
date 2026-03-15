@@ -95,7 +95,6 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp.Status = "error"
 		resp.Error = err.Error()
-		// Even on error, we want to see what was captured in CombinedOutput
 		resp.Output = string(output)
 	}
 
@@ -122,8 +121,15 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Beeper Bridge Manager API is running. Instance ID: %s", os.Getenv("CLOUDFLARE_DURABLE_OBJECT_ID"))
 }
 
+// Health check handler
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "OK")
+}
+
 func main() {
 	log.Println("Container API server starting up...")
+	
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -131,6 +137,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", statusHandler)
+	mux.HandleFunc("/health", healthHandler)
 	mux.HandleFunc("/api/bbctl", bbctlHandler)
 	mux.HandleFunc("/api/procs", listProcsHandler)
 

@@ -52,11 +52,21 @@ export class MyContainer extends Container<Env> {
 	// Port the container listens on
 	defaultPort = 8080;
 	requiredPorts = [8080];
+	pingEndpoint = "/health";
 	// We want the container to stay alive for as long as possible or as configured
 	sleepAfter = "1h";
 
 	override async onStart() {
 		console.log("Beeper Bridge Manager container starting. Durable Object ID:", this.id.toString());
+	}
+
+	override onError(error: Error) {
+		console.error("Beeper Bridge Manager container error:", error);
+	}
+
+	override onActivityExpired(): boolean {
+		// Keep the container alive as long as possible for now
+		return true;
 	}
 }
 
