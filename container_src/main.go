@@ -61,12 +61,12 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 		cmd.Env = append(cmd.Env, "BEEPER_BRIDGE_MANAGER_TOKEN="+data.Token)
 		cmd.Env = append(cmd.Env, "BEEPER_URL=https://matrix.beeper.com")
 
-		// Create ~/.config directory
-		configDir := "/data/.config"
+		// Create ~/.config/bbctl directory
+		configDir := "/data/.config/bbctl"
 		os.MkdirAll(configDir, 0755)
 
-		// Create bbctl.json with the token
-		configPath := configDir + "/bbctl.json"
+		// Create config.json with the token
+		configPath := configDir + "/config.json"
 		configContent := fmt.Sprintf(`{"whoami": "@user:beeper.local", "access_token": "%s", "homeserver": "https://matrix.beeper.com", "data_dir": "/data/.local/share/bbctl"}`, data.Token)
 		os.WriteFile(configPath, []byte(configContent), 0644)
 		log.Printf("Manually wrote config to %s", configPath)
