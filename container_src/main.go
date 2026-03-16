@@ -54,12 +54,22 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 	cmd.Env = append(cmd.Env, "XDG_DATA_HOME=/data/.local/share")
 	cmd.Env = append(cmd.Env, "XDG_CACHE_HOME=/data/.cache")
 
-	// If a token is provided, inject it as an environment variable
+	// If a token is provided, inject it as an environment variable and write config file
 	if data.Token != "" {
 		cmd.Env = append(cmd.Env, "BEEPER_TOKEN="+data.Token)
 		cmd.Env = append(cmd.Env, "MATRIX_ACCESS_TOKEN="+data.Token)
 		cmd.Env = append(cmd.Env, "BEEPER_BRIDGE_MANAGER_TOKEN="+data.Token)
 		cmd.Env = append(cmd.Env, "BEEPER_URL=https://matrix.beeper.com")
+
+		// Create ~/.config directory
+		configDir := "/data/.config"
+		os.MkdirAll(configDir, 0755)
+
+		// Create bbctl.json with the token
+		configPath := configDir + "/bbctl.json"
+		configContent := fmt.Sprintf(`{"whoami": "@user:beeper.local", "access_token": "%s", "homeserver": "https://matrix.beeper.com", "data_dir": "/data/.local/share/bbctl"}`, data.Token)
+		os.WriteFile(configPath, []byte(configContent), 0644)
+		log.Printf("Manually wrote config to %s", configPath)
 	}
 
 	if data.Async {
