@@ -32,8 +32,9 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data struct {
-		Args []string `json:"args"`
+		Args  []string `json:"args"`
 		Async bool     `json:"async"`
+		Token string   `json:"token"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -41,7 +42,7 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Executing bbctl %s (async: %v)", strings.Join(data.Args, " "), data.Async)
+	log.Printf("Executing bbctl %s (async: %v, hasToken: %v)", strings.Join(data.Args, " "), data.Async, data.Token != "")
 
 	// Execute bbctl
 	cmd := exec.Command("bbctl", data.Args...)
@@ -52,6 +53,12 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 	cmd.Env = append(cmd.Env, "XDG_CONFIG_HOME=/data/.config")
 	cmd.Env = append(cmd.Env, "XDG_DATA_HOME=/data/.local/share")
 	cmd.Env = append(cmd.Env, "XDG_CACHE_HOME=/data/.cache")
+
+	// If a token is provided, inject it as an environment variable
+	if data.Token != "" {
+		cmd.Env = append(cmd.Env, "BEEPER_TOKEN="+data.Token)
+		cmd.Env = append(cmd.Env, "MATRIX_ACCESS_TOKEN="+data.Token)
+	}
 
 	if data.Async {
 		// Run in background

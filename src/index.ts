@@ -139,8 +139,8 @@ app.get("/", (c) => {
         (function() {
             console.log('Beeper Bridge Manager UI initializing...');
             
-            window.callApi = async function(args, isAsync) {
-                console.log('callApi called with:', args, isAsync);
+            window.callApi = async function(args, isAsync, token) {
+                console.log('callApi called with:', args, isAsync, !!token);
                 const output = document.getElementById('output');
                 output.textContent = 'Executing: bbctl ' + args.join(' ') + '...';
                 try {
@@ -148,7 +148,7 @@ app.get("/", (c) => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({ args: args, async: !!isAsync })
+                        body: JSON.stringify({ args: args, async: !!isAsync, token: token || '' })
                     });
                     
                     console.log('API response status:', res.status);
@@ -174,7 +174,8 @@ app.get("/", (c) => {
                 console.log('Login button clicked');
                 const token = document.getElementById('token').value;
                 if (!token) return alert('Token is required');
-                await window.callApi(['login', '--token', token]);
+                // Use 'whoami' with the token to verify and save the session non-interactively
+                await window.callApi(['whoami'], false, token);
             };
 
             window.runBridge = async function() {
