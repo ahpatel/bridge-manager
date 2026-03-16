@@ -132,12 +132,25 @@ app.get("/", (c) => {
         <button onclick="window.callApi(['whoami'])" style="background: #6c757d;">Check Login Status</button>
     </div>
 
+    <div class="form-group">
+        <label for="custom-cmd">Custom Command:</label>
+        <input type="text" id="custom-cmd" placeholder="e.g. login --help" style="width: 100%;">
+        <button onclick="window.runCustom()" style="width: 100%; margin-top: 0.5rem; background: #28a745;">Run Custom bbctl Command</button>
+    </div>
+
     <h3>Terminal Output:</h3>
     <pre id="output">Waiting for action...</pre>
 
     <script>
         (function() {
             console.log('Beeper Bridge Manager UI initializing...');
+            
+            window.runCustom = async function() {
+                const cmd = document.getElementById('custom-cmd').value;
+                if (!cmd) return alert('Command is required');
+                const args = cmd.split(' ');
+                await window.callApi(args);
+            };
             
             window.callApi = async function(args, isAsync, token) {
                 console.log('callApi called with:', args, isAsync, !!token);

@@ -58,6 +58,8 @@ func bbctlHandler(w http.ResponseWriter, r *http.Request) {
 	if data.Token != "" {
 		cmd.Env = append(cmd.Env, "BEEPER_TOKEN="+data.Token)
 		cmd.Env = append(cmd.Env, "MATRIX_ACCESS_TOKEN="+data.Token)
+		cmd.Env = append(cmd.Env, "BEEPER_BRIDGE_MANAGER_TOKEN="+data.Token)
+		cmd.Env = append(cmd.Env, "BEEPER_URL=https://matrix.beeper.com")
 	}
 
 	if data.Async {
